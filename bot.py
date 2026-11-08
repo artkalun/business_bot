@@ -11,6 +11,8 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 
+from core.filters import OwnerCheck
+
 load_dotenv('.env')
 
 logger = logging.getLogger()
@@ -19,7 +21,7 @@ dp = Dispatcher()
 
 
 @dp.message(CommandStart())
-async def start(message: Message):
+async def start(message):
     await message.answer('Hello World!')
 
 
