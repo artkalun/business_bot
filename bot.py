@@ -1,12 +1,13 @@
 import datetime
 import logging
 import os
+import sqlite3
 import sys
 
 import asyncio
 from dotenv import load_dotenv
 
-from aiogram import Bot, Dispatcher, html
+from aiogram import Bot, Dispatcher, html, F
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
@@ -19,10 +20,44 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 dp = Dispatcher()
 
+conn = sqlite3.connect('database.db')
+cur = conn.cursor()
+
 
 @dp.message(CommandStart())
 async def start(message):
     await message.answer('Hello World!')
+
+
+@dp.business_message(OwnerCheck(), F.text)
+async def text_handler(message):
+    cur.execute(
+        "INSERT INTO messages (id, sent_at, type, content) VALUES (?, ?, \"text\", ?)",
+        (message.message_id, message.date.isoformat(), message.text)
+    )
+
+    conn.commit()
+
+
+@dp.business_message(OwnerCheck(), F.photo)
+async def photo_handler(message, bot):
+    file_id = max(message.photo, key=lambda x: x.file_size).file_id
+    file = (await bot.get_file(file_id)).file_path
+    await bot.download_file(file, f'storage\\{message.message_id}{os.path.splitext(file)[1]}')
+
+    if message.caption:
+        cur.execute(
+            "INSERT INTO messages (id, sent_at, type, conetnt, file_expired) VALUES (?, ?, \"photo\", ?, 0)",
+            (message.message_id, message.date.isoformat(), message.caption)
+        )
+    else:
+        cur.execute(
+            "INSERT INTO messages (id, sent_at, type, file_expired) VALUES (?, ?, \"photo\", 0)",
+            (message.message_id, message.date.isoformat())
+        )
+
+    conn.commit()
+        
 
 
 async def main():
