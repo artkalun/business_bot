@@ -12,7 +12,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 
-from core.filters import OwnerCheck
+from core.filters import OwnerCheck, OwnerMessageCheck
 
 load_dotenv('.env')
 
@@ -57,7 +57,6 @@ async def photo_handler(message, bot):
         )
 
     conn.commit()
-        
 
 
 async def main():
