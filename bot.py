@@ -39,7 +39,7 @@ async def save_disappearing(message, bot):
     )
 
     if message.reply_to_message.photo:
-        file_id = max(message.reply_to_message.photo, key=lambda x: x.file_size).file_id
+        file_id = message.reply_to_message.photo[-1].file_id
     elif message.reply_to_message.video:
         file_id = message.reply_to_message.video.file_id
     else:
@@ -70,7 +70,7 @@ async def text_handler(message):
 
 @dp.business_message(OwnerCheck(), F.photo)
 async def photo_handler(message, bot):
-    file_id = max(message.photo, key=lambda x: x.file_size).file_id
+    file_id = message.photo[-1].file_id
     file = (await bot.get_file(file_id)).file_path
     await bot.download_file(file, f'storage\\{message.message_id}{os.path.splitext(file)[1]}')
 
