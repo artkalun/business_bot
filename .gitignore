@@ -8,3 +8,5 @@ logs/*
 !logs/.gitkeep
 
 .env
+database.db
+database.py
