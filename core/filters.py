@@ -9,4 +9,4 @@ class OwnerCheck(Filter):
 
 class OwnerMessageCheck(Filter):
     async def __call__(self, message):
-        return message.from_user.id == int(os.getenv('OWNER-ID'))
+        return message.from_user.id == int(os.getenv('OWNER-ID')) and message.business_connection_id == os.getenv('BUSINESS-CONNECTION-ID')
