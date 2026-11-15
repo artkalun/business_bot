@@ -1,4 +1,5 @@
 import datetime
+import io
 import logging
 import os
 import sqlite3
@@ -11,6 +12,7 @@ from aiogram import Bot, Dispatcher, html, F
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
+from aiogram.types import BufferedInputFile
 
 from core.filters import OwnerCheck, OwnerMessageCheck
 
@@ -27,6 +29,33 @@ cur = conn.cursor()
 @dp.message(CommandStart())
 async def start(message):
     await message.answer('Hello World!')
+
+
+@dp.business_message(Command('save', prefix='!'), OwnerMessageCheck())
+async def save_disappearing(message, bot):
+    await bot.delete_business_messages(
+        os.getenv('BUSINESS-CONNECTION-ID'),
+        [message.message_id]
+    )
+
+    if message.reply_to_message.photo:
+        file_id = max(message.reply_to_message.photo, key=lambda x: x.file_size).file_id
+    elif message.reply_to_message.video:
+        file_id = message.reply_to_message.video.file_id
+    else:
+        print('somthing went wrong')
+        return
+
+    file = (await bot.get_file(file_id)).file_path
+
+    with io.BytesIO() as buf:
+        await bot.download_file(file, buf)
+        input_file = BufferedInputFile(buf.read(), os.path.basename(file))
+
+    if message.reply_to_message.photo:
+        await bot.send_photo(os.getenv('OWNER-ID'), input_file)
+    elif message.reply_to_message.video:
+        await bot.send_video(os.getenv('OWNER-ID'), input_file)
 
 
 @dp.business_message(OwnerCheck(), F.text)
